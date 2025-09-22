@@ -34,7 +34,7 @@ def gauss(A, b, eps=1e-10):
             b_copy[k], b_copy[max_row] = b_copy[max_row], b_copy[k]
 
         for i in range(k + 1, n):
-            if abs(A[k][k])<=eps:continue #Проверка на нулевой столбец
+            if abs(A_copy[k][k])<=eps:continue #Проверка на нулевой столбец
             t = A_copy[i][k] / A_copy[k][k]
 
             for j in range(k + 1, n):
@@ -79,3 +79,4 @@ else:
 1 2 -1
 -1 13 9
 '''
+
