@@ -15,12 +15,8 @@ trans=np.transpose(A)
 sim=np.dot(trans,A)
 bsim=np.dot(trans,b)
 
-if np.array_equal(A,trans):
-    sim=A
-    bsim=b
-
-
-pred=np.array([0]*n)
+c=0
+pred=np.zeros(n)
 ksi=np.array([1]+[0]*(n-1))
 while(np.linalg.norm(ksi)> eps):
 
@@ -30,12 +26,15 @@ while(np.linalg.norm(ksi)> eps):
 
     x=pred-tau*ksi
     pred=x
+    c+=1
 
-print("Ответ: ")
-print(x)
+print(f'Матрица A\n{A}')
+print(f'Вектор b\n {b}')
+print(f'Ответ: \n{x}')
+print(f'Колличество итераций: {c}')
 
 '''
-for k in range(1,1000):
+while(np.linalg.norm(ksi)> eps):
     ksi=np.dot(sim,pred) -bsim
     tau=(np.dot(np.dot(sim,ksi),ksi)/np.dot(np.dot(sim,ksi),np.dot(sim,ksi)))
     E=np.eye(3)
