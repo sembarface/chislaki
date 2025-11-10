@@ -11,7 +11,7 @@ def diff(x):
 def fi(x):
     return (x-f(x)/diff(x))
 
-#Метод Ньютона
+#Разностный Метод Ньютона
 x0=0
 x=fi(x0)
 c=0
@@ -19,7 +19,7 @@ while(abs(x-x0)>eps):
     x0=x
     x=fi(x0)
     c+=1
-print('Обычный метод Ньютона')
+print('Разностный Метод Ньютона')
 print(f'Ответ {x}')
 print(f'Итераций {c}')
 print()
