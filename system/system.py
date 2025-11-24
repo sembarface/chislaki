@@ -4,15 +4,16 @@ import numpy as np
 plt.figure(figsize=(9, 6))
 eps = 1e-10
 
-def f(x, y):
-    '''Первое уравнение системы: f(x,y) = 0'''
-    '''return x**2 + y**2 - 4'''
-    return np.sin(x)+ (y-3)**3
 
-def g(x, y):
+def f(x, y):
     '''Второе уравнение системы: g(x,y) = 0'''
     '''return x**2 - y - 1'''
     return 7*x**2 - 4*y
+
+def g(x, y):
+    '''Первое уравнение системы: f(x,y) = 0'''
+    '''return x**2 + y**2 - 4'''
+    return np.sin(x)+ (y-3)**3
 
 def f_x(x,y):
     return (f(x+eps, y) - f(x-eps, y)) / (2*eps)
@@ -27,8 +28,8 @@ def g_y(x,y):
     return (g(x, y+eps) - g(x, y-eps)) / (2*eps)
 
 # Метод Брауна
-x0 = 3
-y0 = 3
+x0 = 10
+y0 = 10
 x_k = x0
 y_k = y0
 c = 0
