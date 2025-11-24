@@ -95,7 +95,7 @@ plt.ylim(-5, 5)
 
 # Добавляем начальное приближение
 plt.plot(x0, y0, 'go', markersize=6, label=f'Начальное приближение: ({x0}, {y0})')
+
 plt.legend()
 plt.show()
 '''https://ikfia.ysn.ru/wp-content/uploads/2018/01/OrtegaRejnboldt1975ru.pdf'''
-
