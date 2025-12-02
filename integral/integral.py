@@ -1,13 +1,30 @@
-from math import *
 import matplotlib.pyplot as plt
 import numpy as np
 
 def f(x):
-    return np.sin(x) +2**x -5*np.cos(x**2) # пример функции для интегрирования
+    '''return np.sin(x) +2**x -5*np.cos(x**2)''' # пример функции для интегрирования
+    '''return np.sin(x)'''
+    return (4/(x**2+1))
+
+
+def accurate(n):
+    h = (b - a) / n
+    sum=0
+    for i in range(n+1):
+        sum+=h*(f(a+i*h))
+    return sum
 
 # Параметры интегрирования
+'''a = 0
+b = np.pi
+acc=2   #Точное значение
+'''
+
 a = 0
-b = 3
+b = 1
+acc=np.pi #Точное значение
+'''print(acc)
+print(accurate(1000000))'''
 n = 6  # степень многочлена Лагранжа
 
 # Равномерно распределенные узлы на отрезке [a, b]
@@ -17,7 +34,7 @@ nodes = [a + i*h for i in range(n+1)]
 # Коэффициенты для n=6 (формула 7-го порядка точности)
 C = [
     41*h/140,
-    216*h/140, 
+    216*h/140,
     27*h/140,
     272*h/140,
     27*h/140,
@@ -41,6 +58,7 @@ def lagrange_poly(x):
         result += term
     return result
 
+
 print("Квадратурная формула интерполяционного типа")
 print(f"Отрезок интегрирования: [{a}, {b}]")
 print(f"Степень многочлена Лагранжа: n = {n}")
@@ -49,6 +67,7 @@ print(f"Узлы интерполирования: {[f'{x:.4f}' for x in nodes]}
 print(f"Коэффициенты C_k: {[f'{c:.6f}' for c in C]}")
 print()
 print(f"Приближенное значение интеграла: {integral_approx:.10f}")
+print(f"Модуль погрешности: {abs(acc-integral_approx)}")
 
 # Построение графиков
 x_plot = np.linspace(a, b, 1000)
