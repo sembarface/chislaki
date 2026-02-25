@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# ====== ЗАДАЧА (замени под свою) ======
 def f(t, u):
     # пример: u' = -u, u(0)=1
     return -u
@@ -16,7 +15,7 @@ T  = 5.0
 u0 = 1.0
 
 h = 0.5  # базовый шаг
-# =====================================
+
 
 
 def rk4_step(f, t, y, h):
@@ -131,5 +130,6 @@ plt.xlabel("t")
 plt.ylabel("|u_num - u_exact|")
 plt.grid(True, which="both")
 plt.legend()
+
 
 plt.show()
