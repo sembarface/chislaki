@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 
 
 def f(t, u):
-    # пример: u' = -u, u(0)=1
     return -u
 
 def u_exact(t):
@@ -16,8 +15,6 @@ u0 = 1.0
 
 h = 0.5  # базовый шаг
 
-
-
 def rk4_step(f, t, y, h):
     k1 = f(t, y)
     k2 = f(t + 0.5*h, y + 0.5*h*k1)
@@ -27,16 +24,7 @@ def rk4_step(f, t, y, h):
 
 
 def solve_adams_moulton_5step(f, t0, T, y0, h, it_max=50, tol=1e-12):
-    """
-    5-шаговый неявный метод Адамса (Adams–Moulton, порядок 5):
-      y_n = y_{n-1} + h/720*(251 f_n + 646 f_{n-1} -264 f_{n-2} +106 f_{n-3} -19 f_{n-4})
 
-    Неявность решаем простыми итерациями:
-      y^{s+1} = y_{n-1} + h/720*(251 f(t_n, y^s) + остальное)
-
-    Начальное приближение y^(0) берём предиктором Adams–Bashforth 4-го порядка:
-      y_pred = y_{n-1} + h/24*(55 f_{n-1} -59 f_{n-2} +37 f_{n-3} -9 f_{n-4})
-    """
     N = int(np.round((T - t0) / h))
     t = t0 + h*np.arange(N + 1)
 
@@ -130,6 +118,5 @@ plt.xlabel("t")
 plt.ylabel("|u_num - u_exact|")
 plt.grid(True, which="both")
 plt.legend()
-
 
 plt.show()
