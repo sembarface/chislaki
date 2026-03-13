@@ -49,14 +49,30 @@ h = 0.5
 
 
 
-# RK4
+# RK6
 
-def rk4_step(f, t, y, h):
+def rk6_step(f, t, y, h):
     k1 = f(t, y)
-    k2 = f(t + 0.5*h, y + 0.5*h*k1)
-    k3 = f(t + 0.5*h, y + 0.5*h*k2)
-    k4 = f(t + h, y + h*k3)
-    return y + (h/6.0)*(k1 + 2*k2 + 2*k3 + k4)
+
+    k2 = f(t + h/3.0,
+           y + h*(k1/3.0))
+
+    k3 = f(t + 2.0*h/3.0,
+           y + h*(2.0*k2/3.0))
+
+    k4 = f(t + h/3.0,
+           y + h*(k1/12.0 + k2/3.0 - k3/12.0))
+
+    k5 = f(t + h/2.0,
+           y + h*(-k1/16.0 + 9.0*k2/8.0 - 3.0*k3/16.0 - 3.0*k4/8.0))
+
+    k6 = f(t + h/2.0,
+           y + h*(9.0*k2/8.0 - 3.0*k3/8.0 - 3.0*k4/4.0 + k5/2.0))
+
+    k7 = f(t + h,
+           y + h*(9.0*k1/44.0 - 9.0*k2/11.0 + 63.0*k3/44.0 + 18.0*k4/11.0 - 16.0*k6/11.0))
+
+    return y + h*(11.0*k1/120.0 + 27.0*k3/40.0 + 27.0*k4/40.0 - 4.0*k5/15.0 - 4.0*k6/15.0 + 11.0*k7/120.0)
 
 
 # 5-шаговый Adams–Moulton
@@ -70,7 +86,7 @@ def solve_adams_moulton_5step(f, t0, T, y0, h, it_max=50, tol=1e-12):
     y[0] = y0
 
     for n in range(1, min(5, N + 1)):
-        y[n] = rk4_step(f, t[n-1], y[n-1], h)
+        y[n] = rk6_step(f, t[n-1], y[n-1], h)
 
     if N < 4:
         return t, y
@@ -150,6 +166,17 @@ plt.legend()
 
 
 # погрешности
+
+p_max = np.log2(emax_h / emax_h2)
+p_l2 = np.log2(el2_h / el2_h2)
+
+print("=== Ошибки ===")
+print(f"h   = {h}   max|e| = {emax_h:.6e}   L2 = {el2_h:.6e}")
+print(f"h/2 = {h/2} max|e| = {emax_h2:.6e}   L2 = {el2_h2:.6e}")
+
+print("\n=== Фактический порядок ===")
+print("p_max =", p_max)
+print("p_L2  =", p_l2)
 
 plt.figure()
 
