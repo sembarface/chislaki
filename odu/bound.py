@@ -1,231 +1,247 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Точное решение тестовой задачи
 
-# Краевая задача
-# y'' - p(x)*y = f(x),   x in [a,b]
-#
-# y'(a) - alpha1*y(a) = alpha2
-# y'(b) - beta1*y(b)  = beta2
+# def p(x):
+#     return 1.0 + x
 
+# def f(x):
+#     return 2.0 - x*np.exp(x) - x**2 - x**3
 
-def solve_bvp_d(p, f, a, b, alpha1, alpha2, beta1, beta2, h, use_bc6=False):
+# a = 0.0
+# b = 1.0
 
-    q = (b - a) / h
-    N = int(round(q))
+# alpha1 = 2.0
+# alpha2 = -1.0
 
-    if abs(q - N) > 1e-12:
-        raise ValueError("(b - a) должно делиться на h")
+# beta1 = -1.0
+# beta2 = 2.0*np.e + 3.0
 
-    if N < 7:
-        raise ValueError("Нужно достаточно мелкое h, чтобы N >= 7")
+# def y_exact(x):
+#     return np.exp(x) + x**2
 
-    x = a + h * np.arange(N + 1)
-
-    A = np.zeros((N + 1, N + 1))
-    rhs = np.zeros(N + 1)
-
-    # ЛЕВОЕ ГРАНИЧНОЕ УСЛОВИЕ
-    if not use_bc6:
-        # O(h^3)
-        # y'(a) = (-11 y0 + 18 y1 - 9 y2 + 2 y3)/(6h) + O(h^3)
-        A[0, 0] = -11.0/(6.0*h) - alpha1
-        A[0, 1] =  18.0/(6.0*h)
-        A[0, 2] =  -9.0/(6.0*h)
-        A[0, 3] =   2.0/(6.0*h)
-        rhs[0] = alpha2
-    else:
-        # O(h^6)
-        # y'(a) =
-        # (-147 y0 + 360 y1 - 450 y2 + 400 y3 - 225 y4 + 72 y5 - 10 y6)/(60 h)
-        # + O(h^6)
-        A[0, 0] = -147.0/(60.0*h) - alpha1
-        A[0, 1] =  360.0/(60.0*h)
-        A[0, 2] = -450.0/(60.0*h)
-        A[0, 3] =  400.0/(60.0*h)
-        A[0, 4] = -225.0/(60.0*h)
-        A[0, 5] =   72.0/(60.0*h)
-        A[0, 6] =  -10.0/(60.0*h)
-        rhs[0] = alpha2
-
-    # =====================================================
-    # УЗЕЛ i = 1 : y'' = O(h^6)
-    # =====================================================
-    i = 1
-    A[i, 0] =   7.0/10.0   / h**2
-    A[i, 1] = - 7.0/18.0   / h**2 - p(x[i])
-    A[i, 2] = -27.0/10.0   / h**2
-    A[i, 3] =  19.0/4.0    / h**2
-    A[i, 4] = -67.0/18.0   / h**2
-    A[i, 5] =   9.0/5.0    / h**2
-    A[i, 6] = - 1.0/2.0    / h**2
-    A[i, 7] =  11.0/180.0  / h**2
-    rhs[i] = f(x[i])
-
-    # =====================================================
-    # УЗЕЛ i = 2 : y'' = O(h^6)
-    # =====================================================
-    i = 2
-    A[i, 0] = -11.0/180.0  / h**2
-    A[i, 1] = 107.0/90.0   / h**2
-    A[i, 2] = -21.0/10.0   / h**2 - p(x[i])
-    A[i, 3] =  13.0/18.0   / h**2
-    A[i, 4] =  17.0/36.0   / h**2
-    A[i, 5] = - 3.0/10.0   / h**2
-    A[i, 6] =   4.0/45.0   / h**2
-    A[i, 7] = - 1.0/90.0   / h**2
-    rhs[i] = f(x[i])
-
-    # =====================================================
-    # ЦЕНТРАЛЬНЫЕ УЗЛЫ: i = 3, ..., N-3
-    # 7-точечная симметричная формула O(h^6)
-    # =====================================================
-    for i in range(3, N - 2):
-        A[i, i-3] =   1.0/90.0   / h**2
-        A[i, i-2] = - 3.0/20.0   / h**2
-        A[i, i-1] =   3.0/2.0    / h**2
-        A[i, i]   = -49.0/18.0   / h**2 - p(x[i])
-        A[i, i+1] =   3.0/2.0    / h**2
-        A[i, i+2] = - 3.0/20.0   / h**2
-        A[i, i+3] =   1.0/90.0   / h**2
-        rhs[i] = f(x[i])
-
-    # =====================================================
-    # УЗЕЛ i = N-2 : y'' = O(h^6)
-    # =====================================================
-    i = N - 2
-    A[i, N-7] = - 1.0/90.0   / h**2
-    A[i, N-6] =   4.0/45.0   / h**2
-    A[i, N-5] = - 3.0/10.0   / h**2
-    A[i, N-4] =  17.0/36.0   / h**2
-    A[i, N-3] =  13.0/18.0   / h**2
-    A[i, N-2] = -21.0/10.0   / h**2 - p(x[i])
-    A[i, N-1] = 107.0/90.0   / h**2
-    A[i, N]   = -11.0/180.0  / h**2
-    rhs[i] = f(x[i])
-
-    # =====================================================
-    # УЗЕЛ i = N-1 : y'' = O(h^6)
-    # =====================================================
-    i = N - 1
-    A[i, N-7] =  11.0/180.0  / h**2
-    A[i, N-6] = - 1.0/2.0    / h**2
-    A[i, N-5] =   9.0/5.0    / h**2
-    A[i, N-4] = -67.0/18.0   / h**2
-    A[i, N-3] =  19.0/4.0    / h**2
-    A[i, N-2] = -27.0/10.0   / h**2
-    A[i, N-1] = - 7.0/18.0   / h**2 - p(x[i])
-    A[i, N]   =   7.0/10.0   / h**2
-    rhs[i] = f(x[i])
-
-    # =====================================================
-    # ПРАВОЕ ГРАНИЧНОЕ УСЛОВИЕ
-    # =====================================================
-    if not use_bc6:
-        # O(h^3)
-        # y'(b) = (11 yN - 18 yN-1 + 9 yN-2 - 2 yN-3)/(6h) + O(h^3)
-        A[N, N]   =  11.0/(6.0*h) - beta1
-        A[N, N-1] = -18.0/(6.0*h)
-        A[N, N-2] =   9.0/(6.0*h)
-        A[N, N-3] =  -2.0/(6.0*h)
-        rhs[N] = beta2
-    else:
-        # O(h^6)
-        # y'(b) =
-        # (147 yN - 360 yN-1 + 450 yN-2 - 400 yN-3 + 225 yN-4 - 72 yN-5 + 10 yN-6)/(60 h)
-        # + O(h^6)
-        A[N, N]   =  147.0/(60.0*h) - beta1
-        A[N, N-1] = -360.0/(60.0*h)
-        A[N, N-2] =  450.0/(60.0*h)
-        A[N, N-3] = -400.0/(60.0*h)
-        A[N, N-4] =  225.0/(60.0*h)
-        A[N, N-5] =  -72.0/(60.0*h)
-        A[N, N-6] =   10.0/(60.0*h)
-        rhs[N] = beta2
-
-    y = np.linalg.solve(A, rhs)
-
-    return x, y
-
-
-# Ошибки
-
-def errors_on_grid(x, y, y_exact):
-    u = y_exact(x)
-    e = y - u
-    err_max = np.max(np.abs(e))
-    err_l2 = np.sqrt(np.mean(e * e))
-    return u, e, err_max, err_l2
-
-
-# Тестовая задача с точным решением
-
-def y_exact(x):
-    return np.exp(x) + x**2
 
 def p(x):
-    return 1.0 + x
+    return 1.0 + x**2
+
 
 def f(x):
-    return (np.exp(x) + 2.0) - (1.0 + x) * (np.exp(x) + x**2)
-
+    return -2.0*np.exp(x)*np.sin(x) - (1.0 + x**2)*np.exp(x)*np.cos(x)
 
 a = 0.0
 b = 1.0
 
 alpha1 = 1.0
-beta1 = -1.0
+beta1 = 0.0
 
-alpha2 = (np.exp(a) + 2.0*a) - alpha1 * (np.exp(a) + a*a)
-beta2  = (np.exp(b) + 2.0*b) - beta1  * (np.exp(b) + b*b)
+alpha2 = 0.0
+beta2 = np.e * (np.cos(1.0) - np.sin(1.0))
+
+def y_exact(x):
+    return np.exp(x) * np.cos(x)
+
+# Параметры краевой задачи
+# y'(a) - alpha1*y(a) = alpha2
+# y'(b) - beta1*y(b) = beta2
+
+# Решение краевой задачи:
+# внутри O(h^6), границы O(h^3)
+# трёхдиагональная схема
+
+def solve_bvp_num6_bc3(a, b, h, p, f, alpha1, alpha2, beta1, beta2):
+    N = int(np.round((b - a) / h))
+
+    if N < 2:
+        raise ValueError('Слишком крупный шаг h')
+
+    if abs(a + N*h - b) > 1e-12:
+        raise ValueError('Шаг h не делит отрезок [a, b] на целое число частей')
+
+    x = a + h*np.arange(N + 1)
+
+    p_val = p(x)
+    f_val = f(x)
+
+    A = np.zeros((N + 1, N + 1))
+    rhs = np.zeros(N + 1)
+
+    dp0 = (p_val[1] - p_val[0]) / h
+    df0 = (f_val[1] - f_val[0]) / h
+
+    dpN = (p_val[N] - p_val[N - 1]) / h
+    dfN = (f_val[N] - f_val[N - 1]) / h
+
+    # Левая граница: O(h^3)
+    #
+    # (y1 - y0)/h - alpha1*y0 - alpha2
+    # - h/2 * (p0*y0 + f0)
+    # - h^2/6 * ((p0*alpha1 + p'(a))*y0 + p0*alpha2 + f'(a)) = 0
+
+    p0 = p_val[0]
+    f0 = f_val[0]
+
+    A[0, 0] = -1.0/h - alpha1 - 0.5*h*p0 - (h**2)*(p0*alpha1 + dp0)/6.0
+    A[0, 1] =  1.0/h
+
+    rhs[0] = alpha2 + 0.5*h*f0 + (h**2)*(p0*alpha2 + df0)/6.0
+
+    # Внутренние узлы: O(h^6)
+    #
+    # (1/h^2 - p_{i-1}/12) y_{i-1}
+    # + (-2/h^2 - 5p_i/6) y_i
+    # + (1/h^2 - p_{i+1}/12) y_{i+1}
+    # =
+    # (f_{i-1} + 10f_i + f_{i+1}) / 12
+
+    for i in range(1, N):
+        A[i, i - 1] =  1.0/h**2 - p_val[i - 1]/12.0
+        A[i, i]     = -2.0/h**2 - 5.0*p_val[i]/6.0
+        A[i, i + 1] =  1.0/h**2 - p_val[i + 1]/12.0
+
+        rhs[i] = (f_val[i - 1] + 10.0*f_val[i] + f_val[i + 1]) / 12.0
+
+    # Правая граница: O(h^3)
+    #
+    # (yN - yN-1)/h - beta1*yN - beta2
+    # + h/2 * (pN*yN + fN)
+    # - h^2/6 * ((pN*beta1 + p'(b))*yN + pN*beta2 + f'(b)) = 0
+
+    pN = p_val[N]
+    fN = f_val[N]
+
+    A[N, N - 1] = -1.0/h
+    A[N, N] = 1.0/h - beta1 + 0.5*h*pN - (h**2)*(pN*beta1 + dpN)/6.0
+
+    rhs[N] = beta2 - 0.5*h*fN + (h**2)*(pN*beta2 + dfN)/6.0
+
+    y = np.linalg.solve(A, rhs)
+
+    return x, y, A, rhs
+
+# Ошибки на сетке
+
+def errors_on_grid(x, y_num, y_exact):
+    y_ex = y_exact(x)
+    e = y_num - y_ex
+
+    err_max = np.max(np.abs(e))
+    err_l2 = np.linalg.norm(e)
+
+    return y_ex, e, err_max, err_l2
 
 
+# Решения на двух шагах
 
-use_bc6 = False
+h = 0.1
+
+x_h, y_h, A_h, rhs_h = solve_bvp_num6_bc3(
+    a, b, h,
+    p, f,
+    alpha1, alpha2, beta1, beta2
+)
+
+x_h2, y_h2, A_h2, rhs_h2 = solve_bvp_num6_bc3(
+    a, b, h/2.0,
+    p, f,
+    alpha1, alpha2, beta1, beta2
+)
 
 
-# Решение на двух сетках
-h1 = 0.1
-h2 = h1 / 2.0
+# Ошибки
 
-x1, y1 = solve_bvp_d(p, f, a, b, alpha1, alpha2, beta1, beta2, h1, use_bc6=use_bc6)
-x2, y2 = solve_bvp_d(p, f, a, b, alpha1, alpha2, beta1, beta2, h2, use_bc6=use_bc6)
+y_ex_h, e_h, emax_h, el2_h = errors_on_grid(x_h, y_h, y_exact)
+y_ex_h2, e_h2, emax_h2, el2_h2 = errors_on_grid(x_h2, y_h2, y_exact)
 
-u1, e1, err1, l2_1 = errors_on_grid(x1, y1, y_exact)
-u2, e2, err2, l2_2 = errors_on_grid(x2, y2, y_exact)
 
-p_max = np.log2(err1 / err2)
-p_l2 = np.log2(l2_1 / l2_2)
+# Фактический порядок
 
-print("=== Режим границ ===")
-if use_bc6:
-    print("Граничные условия: O(h^6)")
-else:
-    print("Граничные условия: O(h^3)")
+p_max = np.log2(emax_h / emax_h2)
+p_l2 = np.log2(el2_h / el2_h2)
 
-print("\n=== Ошибки ===")
-print(f"h   = {h1:.6f}   max|e| = {err1:.6e}   L2 = {l2_1:.6e}")
-print(f"h/2 = {h2:.6f}   max|e| = {err2:.6e}   L2 = {l2_2:.6e}")
+print("=== Ошибки ===")
+print(f"h   = {h}   max|e| = {emax_h:.6e}   L2 = {el2_h:.6e}")
+print(f"h/2 = {h/2} max|e| = {emax_h2:.6e}   L2 = {el2_h2:.6e}")
 
 print("\n=== Фактический порядок ===")
 print("p_max =", p_max)
 print("p_L2  =", p_l2)
 
-plt.figure()
-plt.plot(x2, u2, label="exact")
-plt.plot(x1, y1, "o-", label="h")
-plt.plot(x2, y2, ".-", label="h/2")
+
+# График решения
+
+plt.figure(figsize=(8, 5))
+plt.plot(x_h2, y_ex_h2, label="exact y")
+plt.plot(x_h,  y_h, "o-", label="num y (h)")
+plt.plot(x_h2, y_h2, ".-", label="num y (h/2)")
+
 plt.xlabel("x")
 plt.ylabel("y")
-plt.grid()
+plt.title("Точное и приближенное решение")
+plt.grid(True)
 plt.legend()
 
-plt.figure()
-plt.plot(x1, np.abs(e1), "o-", label="error h")
-plt.plot(x2, np.abs(e2), ".-", label="error h/2")
+
+# График ошибки
+
+plt.figure(figsize=(8, 5))
+plt.plot(x_h,  np.abs(e_h), "o-", label="|error| (h)")
+plt.plot(x_h2, np.abs(e_h2), ".-", label="|error| (h/2)")
+
 plt.yscale("log")
 plt.xlabel("x")
 plt.ylabel("error")
+plt.title("Поточечные ошибки")
+plt.grid(True, which="both")
+plt.legend()
+
+
+# Сходимость на последовательности шагов
+
+h_list = [0.2, 0.1, 0.05, 0.025, 0.0125]
+err_list = []
+
+for h_cur in h_list:
+    x_cur, y_cur, A_cur, rhs_cur = solve_bvp_num6_bc3(
+        a, b, h_cur,
+        p, f,
+        alpha1, alpha2, beta1, beta2
+    )
+
+    y_ex_cur, e_cur, emax_cur, el2_cur = errors_on_grid(x_cur, y_cur, y_exact)
+    err_list.append(emax_cur)
+
+err_list = np.array(err_list)
+
+# print("\n=== Таблица погрешностей ===")
+# print("h           max|e|         ratio")
+# for i in range(len(h_list)):
+#     if i == 0:
+#         print(f"{h_list[i]:<10.5f} {err_list[i]:<14.6e} ---")
+#     else:
+#         ratio = err_list[i - 1] / err_list[i]
+#         print(f"{h_list[i]:<10.5f} {err_list[i]:<14.6e} {ratio:.6f}")
+
+print("\n=== Наблюдаемый порядок ===")
+for i in range(1, len(h_list)):
+    p_obs = np.log2(err_list[i - 1] / err_list[i])
+    print(f"h = {h_list[i - 1]:.5f} -> {h_list[i]:.5f}   p = {p_obs:.6f}")
+
+
+# График сходимости
+
+plt.figure(figsize=(8, 5))
+plt.plot(h_list, err_list, "o-", label="max|e|")
+
+c = err_list[0] / (h_list[0]**3)
+ref = c * np.array(h_list)**3
+plt.plot(h_list, ref, ".-", label="C*h^3")
+
+plt.xscale("log")
+plt.yscale("log")
+plt.xlabel("h")
+plt.ylabel("max error")
+plt.title("Сходимость")
 plt.grid(True, which="both")
 plt.legend()
 
